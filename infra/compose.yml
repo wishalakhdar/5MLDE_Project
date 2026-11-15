@@ -1,0 +1,48 @@
+# Socle d'infrastructure. Lancer : docker compose --env-file .env -f infra/compose.yml up -d
+# ATTENTION : les versions d'images ci-dessous n'ont PAS été vérifiées depuis l'environnement de développement
+# (pas de Docker ni de réseau). Si un tag n'existe pas, ajustez-le puis notez-le dans docs/TRANSFERT.md.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      POSTGRES_DB: velos
+      API_WRITER_PASSWORD: ${API_WRITER_PASSWORD}
+      GRAFANA_READER_PASSWORD: ${GRAFANA_READER_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres:/docker-entrypoint-initdb.d:ro
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d velos"]
+      interval: 5s
+      retries: 10
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.16.1
+    command: >
+      mlflow server --host 0.0.0.0 --port 7281
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts --serve-artifacts
+    volumes: [mlflowdata:/mlflow]
+    ports: ["127.0.0.1:7281:7281"]
+
+  prefect:
+    image: prefecthq/prefect:3.8.7-python3.12
+    command: prefect server start --host 0.0.0.0
+    volumes: [prefectdata:/root/.prefect]
+    ports: ["127.0.0.1:4200:4200"]
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GRAFANA_READER_PASSWORD: ${GRAFANA_READER_PASSWORD}
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+    ports: ["127.0.0.1:3000:3000"]
+
+volumes: {pgdata: {}, mlflowdata: {}, prefectdata: {}, grafanadata: {}}

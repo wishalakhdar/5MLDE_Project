@@ -1,0 +1,1 @@
+{"request_id": "00000000-0000-0000-0000-000000000000", "model": {"name": "velos-demand-cnt", "version": 3, "alias": "champion"}, "predictions": [{"prediction_id": "00000000-0000-0000-0000-000000000001", "cnt": 412.7}]}

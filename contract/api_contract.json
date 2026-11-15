@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "endpoints": {
+    "POST /predict": "corps example_request.json -> example_response.json",
+    "POST /feedback": "{prediction_id, observed_cnt>=0}",
+    "GET /health": "{status, model_version}"
+  },
+  "features": [
+    "season",
+    "yr",
+    "mnth",
+    "hr",
+    "holiday",
+    "weekday",
+    "workingday",
+    "weathersit",
+    "temp",
+    "atemp",
+    "hum",
+    "windspeed"
+  ],
+  "integer_features": [
+    "holiday",
+    "hr",
+    "mnth",
+    "season",
+    "weathersit",
+    "weekday",
+    "workingday",
+    "yr"
+  ],
+  "ranges": {
+    "season": [
+      1,
+      4
+    ],
+    "yr": [
+      0,
+      1
+    ],
+    "mnth": [
+      1,
+      12
+    ],
+    "hr": [
+      0,
+      23
+    ],
+    "holiday": [
+      0,
+      1
+    ],
+    "weekday": [
+      0,
+      6
+    ],
+    "workingday": [
+      0,
+      1
+    ],
+    "weathersit": [
+      1,
+      4
+    ],
+    "temp": [
+      0.0,
+      1.0
+    ],
+    "atemp": [
+      0.0,
+      1.0
+    ],
+    "hum": [
+      0.0,
+      1.0
+    ],
+    "windspeed": [
+      0.0,
+      1.0
+    ]
+  },
+  "forbidden_inputs": [
+    "cnt",
+    "casual",
+    "registered"
+  ],
+  "errors": {
+    "invalid_input": 422,
+    "model_unavailable": 503,
+    "internal": 500
+  },
+  "model_loading": "models:/velos-demand-cnt@champion ; refuser de démarrer si l'alias est absent"
+}

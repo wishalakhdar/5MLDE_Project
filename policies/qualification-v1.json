@@ -1,0 +1,14 @@
+{
+  "id": "velos-qualification",
+  "version": "1.0.0",
+  "description": "Règles de mise en service du modèle de demande horaire. Écrites AVANT d'examiner les résultats des candidats.",
+  "primary_metric": {"name": "mae", "direction": "min", "split": "validation"},
+  "required_metrics": ["mae", "rmse", "r2"],
+  "max_mae": 150.0,
+  "min_gain_vs_baseline": 0.20,
+  "segment_guard": {"column": "weathersit", "min_rows": 20, "max_ratio_to_baseline": 1.0},
+  "reload_tolerance": 1e-6,
+  "min_reload_rows": 50,
+  "min_replacement_gain": 0.01,
+  "notes": "Valeurs initiales. Après un premier run de la baseline SEULE (sans regarder les candidats), confirmer ou ajuster max_mae et min_gain_vs_baseline, puis incrémenter la version de la politique. Ne jamais déplacer un seuil pour faire passer un modèle."
+}

@@ -1,0 +1,16 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen        # exige uv.lock commité
+      - run: uv run pytest -q
+      - name: Smoke test synthétique (sans réseau, sans MLflow)
+        run: |
+          uv run python -c "from velos.synthetic import make_hour_frame; make_hour_frame(seed=1).to_csv('hour.csv', index=False)"
+          uv run velos fetch --from-file hour.csv
+          uv run velos replay-init
+          uv run velos run --no-tracking --no-release

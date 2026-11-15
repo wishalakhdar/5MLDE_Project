@@ -1,0 +1,24 @@
+# Environnement et caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets : ne jamais versionner
+.env
+
+# Données volumineuses ou dérivées (le manifeste data/manifest.json, lui, est versionné)
+data/raw/
+data/store/
+data/incoming/
+data/rejected/
+data/state/
+
+# Résultats d'exécution et modèles
+runs/
+reports/
+registry/
+artifacts/
+mlruns/
+mlartifacts/
+*.joblib

@@ -1,0 +1,65 @@
+{
+  "project": "velos-demand",
+  "seed": 42,
+  "paths": {
+    "raw_dir": "data/raw",
+    "manifest": "data/manifest.json",
+    "store_dir": "data/store",
+    "incoming_dir": "data/incoming",
+    "rejected_dir": "data/rejected",
+    "state_dir": "data/state",
+    "runs_dir": "runs",
+    "reports_dir": "reports",
+    "history_file": "registry/selection-history.jsonl"
+  },
+  "source": {
+    "name": "UCI Bike Sharing",
+    "url": "https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip",
+    "member": "hour.csv",
+    "licence": "CC BY 4.0",
+    "doi": "10.24432/C5W894",
+    "citation": "Fanaee-T, H. (2013). Bike Sharing [Dataset]. UCI Machine Learning Repository."
+  },
+  "replay": {
+    "base_year": 2011,
+    "qualification_month": "2012-12"
+  },
+  "quality": {
+    "snapshot_min_rows": 5000,
+    "lot_min_rows": 500,
+    "lot_max_rows": 800,
+    "min_hours_covered": 24,
+    "mean_cnt_ratio_bounds": [0.3, 3.0]
+  },
+  "split": {
+    "test_fraction": 0.15
+  },
+  "model": {
+    "n_estimators": 100,
+    "max_depth": 12,
+    "min_samples_leaf": 5,
+    "n_jobs": 1
+  },
+  "tracking": {
+    "enabled": true,
+    "uri_env": "MLFLOW_TRACKING_URI",
+    "default_uri": "http://localhost:7281",
+    "experiment": "velos-demand",
+    "model_name": "velos-demand-cnt"
+  },
+  "qualification": {
+    "policy": "policies/qualification-v1.json",
+    "alias": "champion",
+    "reload_sample_rows": 200
+  },
+  "alerts": {
+    "webhook_env": "ALERT_WEBHOOK_URL"
+  },
+  "retry": {
+    "max_retries": 2,
+    "delay_seconds": 10
+  },
+  "schedule": {
+    "interval_seconds": 600
+  }
+}
