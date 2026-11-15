@@ -1,0 +1,35 @@
+{
+  "source": {
+    "name": "UCI Bike Sharing",
+    "url": "https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip",
+    "member": "hour.csv",
+    "licence": "CC BY 4.0",
+    "doi": "10.24432/C5W894",
+    "citation": "Fanaee-T, H. (2013). Bike Sharing [Dataset]. UCI Machine Learning Repository."
+  },
+  "origin": "uci",
+  "retrieved_at_utc": "2026-11-15T16:50:38+00:00",
+  "file": "hour.csv",
+  "sha256": "e03de4ee4ef4dc376ac6e04bf829673c6269e8eba5c60fa121640fa2f829504f",
+  "bytes": 1156736,
+  "rows": 17379,
+  "columns": [
+    "instant",
+    "dteday",
+    "season",
+    "yr",
+    "mnth",
+    "hr",
+    "holiday",
+    "weekday",
+    "workingday",
+    "weathersit",
+    "temp",
+    "atemp",
+    "hum",
+    "windspeed",
+    "casual",
+    "registered",
+    "cnt"
+  ]
+}
