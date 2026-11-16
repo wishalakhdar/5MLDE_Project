@@ -30,6 +30,8 @@ class RegistryBackend(ABC):
     def get_alias(self, name: str, alias: str) -> int | None: ...
     @abstractmethod
     def version_exists(self, name: str, version: int) -> bool: ...
+    @abstractmethod
+    def list_versions(self, name: str) -> list: ...
 
 
 class InMemoryRegistry(RegistryBackend):
@@ -67,6 +69,9 @@ class InMemoryRegistry(RegistryBackend):
 
     def version_exists(self, name, version):
         return (name, version) in self.versions
+
+    def list_versions(self, name):
+        return sorted(v for (n, v) in self.versions if n == name)
 
     def _get(self, name, version):
         try:
@@ -120,6 +125,9 @@ class MlflowRegistry(RegistryBackend):
             return int(self.client.get_model_version_by_alias(name, alias).version)
         except Exception:
             return None
+
+    def list_versions(self, name):
+        return sorted(int(mv.version) for mv in self.client.search_model_versions(f"name='{name}'"))
 
     def version_exists(self, name, version):
         try:

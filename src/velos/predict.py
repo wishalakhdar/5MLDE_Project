@@ -1,6 +1,7 @@
 """Prédire avec un run publié, sans réentraîner (commande de prédiction du TP1)."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import joblib
@@ -8,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from .contract import validate_inference_frame
-from .errors import ConfigError
+from .errors import ConfigError, RegistryError
 from .evaluation import is_complete
 
 
@@ -35,3 +36,40 @@ def predict_file(run_dir, input_csv, output_csv) -> Path:
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(output_csv, index=False, lineterminator="\n")
     return output_csv
+
+
+def load_alias_model(cfg: dict, alias: str | None = None, loader=None):
+    """Charge le modèle désigné par l'ALIAS du registre (ex. models:/velos-demand-cnt@champion).
+    C'est la méthode que l'API doit utiliser. Retourne (modèle, uri, version)."""
+    t = cfg["tracking"]
+    alias = alias or cfg["qualification"]["alias"]
+    uri = f"models:/{t['model_name']}@{alias}"
+    server = os.environ.get(t["uri_env"], t["default_uri"])
+    try:
+        if loader is None:
+            import mlflow
+            from mlflow import MlflowClient
+            mlflow.set_tracking_uri(server)
+            mlflow.set_registry_uri(server)
+            version = int(MlflowClient(tracking_uri=server, registry_uri=server)
+                          .get_model_version_by_alias(t["model_name"], alias).version)
+            model = mlflow.pyfunc.load_model(uri)
+        else:
+            model, version = loader(uri)
+    except Exception as exc:
+        raise RegistryError(f"Impossible de charger {uri} depuis {server} : {type(exc).__name__}: {exc}. "
+                            "L'alias existe-t-il ? (velos versions, velos select)") from exc
+    return model, uri, version
+
+
+def predict_file_alias(cfg: dict, input_csv, output_csv, alias: str | None = None, loader=None):
+    model, uri, version = load_alias_model(cfg, alias, loader)
+    df = pd.read_csv(input_csv)
+    pred = np.clip(np.asarray(model.predict(validate_inference_frame(df))), 0, None)
+    out = pd.DataFrame({"cnt_pred": pred, "model_version": version})
+    if "instant" in df.columns:
+        out.insert(0, "instant", df["instant"].to_numpy())
+    output_csv = Path(output_csv)
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(output_csv, index=False, lineterminator="\n")
+    return output_csv, uri, version

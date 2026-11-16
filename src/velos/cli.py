@@ -6,7 +6,7 @@ import json
 import sys
 
 from .config import load_config, path_of
-from .errors import AlreadyProcessed, QualityError, VelosError
+from .errors import AlreadyProcessed, ConfigError, QualityError, VelosError
 
 
 def _p(msg: str) -> None:
@@ -43,8 +43,10 @@ def build_parser() -> argparse.ArgumentParser:
     vr.add_argument("--run-dir", required=True)
     vr.add_argument("--name", required=True)
     vr.add_argument("--version", type=int, required=True)
-    pr = sub.add_parser("predict", help="prédit avec un run publié")
-    pr.add_argument("--run-dir", required=True)
+    sub.add_parser("versions", help="liste les versions du registre (verdict, métrique, alias)")
+    pr = sub.add_parser("predict", help="prédit avec un run publié OU avec le modèle désigné par un alias")
+    pr.add_argument("--run-dir", help="dossier d'un run publié")
+    pr.add_argument("--alias", help="alias du registre (ex. champion) : chargement models:/<nom>@<alias>")
     pr.add_argument("--input", required=True)
     pr.add_argument("--output", required=True)
     sub.add_parser("stub-model", help="modèle de démonstration pour Jeffrey (données synthétiques)")
@@ -128,9 +130,28 @@ def _dispatch(args, cfg) -> int:
     elif c == "verify-reload":
         from .release import verify_reload
         _p(json.dumps(verify_reload(cfg, args.run_dir, args.name, args.version)))
+    elif c == "versions":
+        from .lifecycle import describe_versions
+        from .qualification import load_policy
+        from .registry import make_backend
+        rows = describe_versions(make_backend(cfg), cfg["tracking"]["model_name"], cfg["qualification"]["alias"],
+                                 load_policy(cfg))
+        if not rows:
+            _p("Aucune version dans le registre.")
+        for r in rows:
+            val = "?" if r["value"] is None else f"{r['value']:.2f}"
+            _p(f"v{r['version']:<3} {r['verdict']:<17} {r['metric']}={val:<8} {r['pipeline_run'] or '':<45} {r['alias']}")
     elif c == "predict":
-        from .predict import predict_file
-        _p(f"Prédictions écrites : {predict_file(args.run_dir, args.input, args.output)}")
+        if bool(args.run_dir) == bool(args.alias):
+            raise ConfigError("Indiquez exactement une option : --run-dir ou --alias.")
+        if args.alias:
+            from .predict import predict_file_alias
+            out, uri, version = predict_file_alias(cfg, args.input, args.output, args.alias)
+            _p(f"Modèle chargé par alias : {uri} (version {version})")
+            _p(f"Prédictions écrites : {out}")
+        else:
+            from .predict import predict_file
+            _p(f"Prédictions écrites : {predict_file(args.run_dir, args.input, args.output)}")
     elif c == "stub-model":
         return _stub_model(cfg)
     return 0

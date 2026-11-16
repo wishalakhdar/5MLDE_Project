@@ -1,5 +1,7 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -8,9 +10,17 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --frozen        # exige uv.lock commité
       - run: uv run pytest -q
-      - name: Smoke test synthétique (sans réseau, sans MLflow)
+      - name: Smoke test de bout en bout (données SYNTHETIQUES, sans réseau ni MLflow)
+        # Exécuté dans un dossier isolé pour ne pas toucher data/manifest.json (empreinte des vraies données UCI).
         run: |
-          uv run python -c "from velos.synthetic import make_hour_frame; make_hour_frame(seed=1).to_csv('hour.csv', index=False)"
-          uv run velos fetch --from-file hour.csv
-          uv run velos replay-init
-          uv run velos run --no-tracking --no-release
+          mkdir -p smoke
+          cp config.json smoke/ && cp -r policies smoke/
+          uv run python -c "from velos.synthetic import make_hour_frame; make_hour_frame(seed=1).to_csv('smoke/hour.csv', index=False)"
+          uv run velos --config smoke/config.json fetch --from-file smoke/hour.csv
+          uv run velos --config smoke/config.json replay-init
+          uv run velos --config smoke/config.json run --no-tracking --no-release
+          uv run velos --config smoke/config.json replay-next
+          uv run velos --config smoke/config.json run --lot smoke/data/incoming/lot-2012-01.csv --no-tracking --no-release
+          uv run velos --config smoke/config.json make-bad-lot --kind negatif
+          code=0; uv run velos --config smoke/config.json run --lot smoke/data/incoming/lot-2012-02.csv --no-tracking --no-release || code=$?
+          test "$code" = "2"   # le lot corrompu doit être rejeté avec le code 2

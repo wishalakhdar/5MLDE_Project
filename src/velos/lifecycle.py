@@ -64,6 +64,30 @@ def _append_history(path, record: dict) -> None:
         fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def _history_mismatch(expected, actual, history_path) -> str:
+    return (f"Incohérence : l'historique ({history_path}) indique que le champion est la v{expected}, "
+            f"mais le registre pointe sur {('la v' + str(actual)) if actual is not None else 'aucune version'}. "
+            "Si vous avez changé de serveur MLflow, renommez ce fichier d'historique et recommencez ; "
+            "sinon l'alias a été modifié à la main.")
+
+
+def describe_versions(backend: RegistryBackend, name: str, alias: str, policy: dict) -> list:
+    """Une ligne par version : verdict, métrique principale (preuve du run), alias en service."""
+    metric = policy["primary_metric"]
+    current = backend.get_alias(name, alias)
+    rows = []
+    for v in backend.list_versions(name):
+        tags = backend.get_tags(name, v)
+        try:
+            value = backend.get_evidence(name, v)["metrics"][metric["split"]][metric["name"]]
+        except Exception:  # preuve illisible : on l'affiche comme inconnue plutôt que de planter
+            value = None
+        rows.append({"version": v, "verdict": tags.get("qualification", "?"),
+                     "metric": f"{metric['split']}.{metric['name']}", "value": value,
+                     "pipeline_run": tags.get("pipeline.run"), "alias": alias if v == current else ""})
+    return rows
+
+
 def alias_stack(history: list[dict], name: str, alias: str) -> list[int]:
     """Rejoue l'historique : select = empiler, rollback = dépiler. Le sommet est la version en service."""
     stack: list[int] = []
@@ -94,6 +118,9 @@ def select_version(backend: RegistryBackend, name: str, version: int, *, policy:
                                f"({'; '.join(decision.reasons)}).")
 
     current = backend.get_alias(name, alias)
+    stack = alias_stack(_read_history(history_path), name, alias)
+    if stack and current != stack[-1]:
+        raise SelectionRefused(_history_mismatch(stack[-1], current, history_path))
     if current is not None and current != version:
         metric = policy["primary_metric"]
         key = metric["split"]
@@ -113,6 +140,9 @@ def select_version(backend: RegistryBackend, name: str, version: int, *, policy:
 
 def rollback(backend: RegistryBackend, name: str, *, alias: str, actor: str, history_path) -> dict:
     stack = alias_stack(_read_history(history_path), name, alias)
+    registry_now = backend.get_alias(name, alias)
+    if stack and registry_now != stack[-1]:
+        raise RegistryError(_history_mismatch(stack[-1], registry_now, history_path))
     if len(stack) < 2:
         raise RegistryError(f"Aucune version précédente pour l'alias « {alias} » : retour arrière impossible.")
     current, target = stack[-1], stack[-2]
