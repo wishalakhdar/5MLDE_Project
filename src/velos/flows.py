@@ -88,7 +88,7 @@ def process_lot_flow(config_path: str, lot_path: str | None = None) -> dict:
         log.info("Rien à faire : %s", exc)
         return {"status": "deja-traite"}
     except QualityError as exc:
-        send_alert(f"[velos] lot REJETÉ (qualité) : {exc.report.summary()}")
+        tracker.fail("ingestion", exc)
         raise
     except BaseException as exc:
         tracker.fail("flow", exc)
