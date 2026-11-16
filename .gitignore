@@ -22,3 +22,6 @@ artifacts/
 mlruns/
 mlartifacts/
 *.joblib
+
+mlflow.db
+mlartifacts
