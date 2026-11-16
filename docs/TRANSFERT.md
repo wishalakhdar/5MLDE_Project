@@ -12,3 +12,10 @@
 
 ## Session de 1 h avec Jeffrey
 1. 10 min : architecture (docs/ARCHITECTURE.md) 2. 15 min : démo pipeline + incident 3. 15 min : contrat API 4. 10 min : schéma SQL + Grafana 5. 10 min : ce qui reste (API, persistance, Locust, Grafana, dimensionnement, intégration finale, synthèse OPS).
+
+## Notes de validation (Aicha, Windows 11, Docker Desktop)
+- Verifies : les 4 services Docker, le schema SQL `tracing`, les droits `api_writer` (lecture/ecriture, pas de DELETE) et `grafana_reader` (lecture seule), la connexion Grafana, le flow Prefect (lots nominaux), la surveillance `serve-flows`, un incident controle (lot corrompu : quarantaine, rapport, alerte, run de suivi en FAILED).
+- Port PostgreSQL : le 5432 est reserve par Windows sur cette machine, donc POSTGRES_PORT=5433 dans .env (a l'interieur de Docker, il reste 5432).
+- Alerte webhook : testee uniquement avec webhook.site (format {"text": ...}). Teams peut exiger un autre format.
+- Non teste : coupure reseau reelle (les retries sont testes en simulation seulement).
+- Seuils de qualification figes en version 1.1.0 : ne pas les deplacer pour faire passer un modele.
