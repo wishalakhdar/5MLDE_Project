@@ -2,7 +2,7 @@
 
 Une interface, plusieurs implémentations (même principe que registry.py) :
   - InMemoryTraceStore : tests et essais sans base ;
-  - PostgresTraceStore : schéma `tracing` de PostgreSQL (étape 2).
+  - PostgresTraceStore : schéma `tracing` de PostgreSQL (postgres_store.py).
 Une panne de stockage lève StoreUnavailable : l'API décide ensuite quoi faire (voir app.py).
 """
 from __future__ import annotations
@@ -57,6 +57,9 @@ class TraceStore(ABC):
     def ping(self) -> bool:
         """True si le stockage répond (utilisé par /health)."""
 
+    def close(self) -> None:
+        """Libère les ressources (connexions) à l'arrêt de l'API. Rien à faire par défaut."""
+
 
 class InMemoryTraceStore(TraceStore):
     """Stockage en mémoire, perdu à l'arrêt. `available=False` simule une panne de la base."""
@@ -103,4 +106,7 @@ def make_store(cfg: dict) -> TraceStore:
     kind = cfg.get("api", {}).get("trace_store", "memory")
     if kind == "memory":
         return InMemoryTraceStore()
-    raise ConfigError(f"api.trace_store inconnu : {kind!r} (valeurs possibles : memory)")
+    if kind == "postgres":
+        from .postgres_store import PostgresTraceStore
+        return PostgresTraceStore.from_config(cfg)
+    raise ConfigError(f"api.trace_store inconnu : {kind!r} (valeurs possibles : memory, postgres)")

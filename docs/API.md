@@ -1,11 +1,24 @@
 # API de prédiction
 
 ## Lancer
+Prérequis : services Docker lancés, alias `champion` posé (`uv run velos select ...`).
 ```
-uv run uvicorn velos.api.app:create_app --factory --host 127.0.0.1 --port 8000
+uv run --env-file .env uvicorn velos.api.app:create_app --factory --host 127.0.0.1 --port 8000
 ```
-Prérequis : MLflow lancé (Docker) et un alias `champion` posé (`uv run velos select ...`).
-Documentation interactive : http://127.0.0.1:8000/docs
+`--env-file .env` transmet à l'API le mot de passe `API_WRITER_PASSWORD` et le port `POSTGRES_PORT`
+(le fichier `.env` n'est jamais versionné). Documentation interactive : http://127.0.0.1:8000/docs
+
+## Persistance (PostgreSQL)
+`config.json` → `api.trace_store` : `postgres` (traces dans le schéma `tracing`) ou `memory` (essais sans base).
+Réglages dans `api.postgres` ; l'environnement peut surcharger l'hôte (`VELOS_DB_HOST`) et le port (`POSTGRES_PORT`).
+L'API se connecte avec le rôle `api_writer` (INSERT/SELECT, pas de DELETE) via un pool de connexions
+(`pool_max` : paramètre comparé lors des tests de charge).
+
+Vérifier les traces :
+```
+docker compose --env-file .env -f infra/compose.yml exec postgres psql -U postgres -d velos -c "SELECT endpoint, status_code, round(latency_ms::numeric,1) AS ms, model_version, error_code FROM tracing.api_requests ORDER BY received_at DESC LIMIT 5"
+```
+Test d'intégration sur la vraie base : `$env:VELOS_PG_TESTS="1"; uv run --env-file .env pytest tests/test_postgres_store.py`
 
 ## Routes
 | Route | Rôle | Codes |

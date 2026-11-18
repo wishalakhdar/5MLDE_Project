@@ -61,8 +61,16 @@
   },
   "schedule": {
     "interval_seconds": 600
-  },   "api": {
+  },    "api": {
     "max_instances": 1000,
-    "trace_store": "memory"
+    "trace_store": "postgres",
+    "postgres": {
+      "host": "localhost",
+      "database": "velos",
+      "user": "api_writer",
+      "pool_min": 1,
+      "pool_max": 4,
+      "timeout_seconds": 3
+    }
   }
 }
