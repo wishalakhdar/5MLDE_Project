@@ -24,6 +24,11 @@ RANGES = {
 MAX_REPORTED = 5
 
 
+def _show(value) -> str:
+    """Valeur lisible dans un message d'erreur : 25 (et non np.int64(25)), 'gratuit' entre guillemets."""
+    return repr(value.item() if hasattr(value, "item") else value)
+
+
 def validate_inference_frame(df) -> pd.DataFrame:
     """Vérifie une entrée de prédiction. Lève InvalidInput (à traduire en HTTP 422) avec la liste
     des problèmes. Retourne un DataFrame typé comme à l'entraînement. Les colonnes supplémentaires
@@ -50,7 +55,7 @@ def validate_inference_frame(df) -> pd.DataFrame:
             (fractional, "doit être un entier"),
         ]:
             for idx in list(df.index[mask][:MAX_REPORTED]):
-                problems.append(f"ligne {idx} : {col} {text} (valeur : {raw.at[idx, col]!r})")
+                problems.append(f"ligne {idx} : {col} {text} (valeur : {_show(raw.at[idx, col])})")
     if problems:
         raise InvalidInput(problems)
     return num.astype({c: "int64" for c in INTEGER_FEATURES})

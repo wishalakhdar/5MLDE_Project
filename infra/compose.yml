@@ -66,6 +66,11 @@ services:
       POSTGRES_PORT: "5432"
       API_WRITER_PASSWORD: ${API_WRITER_PASSWORD}
       API_WORKERS: ${API_WORKERS:-1}
+      # Registre indisponible : abandonner en ~15 s (au lieu de plusieurs minutes) pour démarrer sans modèle
+      # et répondre 503, plutôt que de rester injoignable pendant tout le démarrage.
+      MLFLOW_HTTP_REQUEST_MAX_RETRIES: "2"
+      MLFLOW_HTTP_REQUEST_BACKOFF_FACTOR: "1"
+      MLFLOW_HTTP_REQUEST_TIMEOUT: "10"
     deploy:
       resources:
         limits:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import sys
 
@@ -11,6 +12,13 @@ from .errors import AlreadyProcessed, ConfigError, QualityError, VelosError
 
 def _p(msg: str) -> None:
     print(msg, flush=True)
+
+
+def default_actor() -> str:
+    """Auteur d'une sélection ou d'un retour arrière : --actor, sinon VELOS_ACTOR, sinon l'utilisateur du système
+    (traçabilité : jamais un nom de personne écrit en dur)."""
+    import os
+    return os.environ.get("VELOS_ACTOR") or getpass.getuser()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,11 +42,11 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--version", type=int, required=True)
     s = sub.add_parser("select", help="pose l'alias champion (après contrôles)")
     s.add_argument("--version", type=int, required=True)
-    s.add_argument("--actor", default="aicha")
+    s.add_argument("--actor", default=None)
     s.add_argument("--reason", required=True)
     s.add_argument("--dry-run", action="store_true")
     rb = sub.add_parser("rollback", help="revient au champion précédent")
-    rb.add_argument("--actor", default="aicha")
+    rb.add_argument("--actor", default=None)
     vr = sub.add_parser("verify-reload", help="(interne) recharge une version dans un nouveau processus")
     vr.add_argument("--run-dir", required=True)
     vr.add_argument("--name", required=True)
@@ -60,6 +68,8 @@ def _expected_corpus(cfg):
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    if getattr(args, "actor", "unset") is None:
+        args.actor = default_actor()
     try:
         cfg = load_config(args.config)
         return _dispatch(args, cfg)

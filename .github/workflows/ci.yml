@@ -24,3 +24,13 @@ jobs:
           uv run velos --config smoke/config.json make-bad-lot --kind negatif
           code=0; uv run velos --config smoke/config.json run --lot smoke/data/incoming/lot-2012-02.csv --no-tracking --no-release || code=$?
           test "$code" = "2"   # le lot corrompu doit être rejeté avec le code 2
+
+  docker:
+    # Vérifie l'infrastructure sans la lancer : configuration Compose valide et image de l'API constructible.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configuration Compose valide (valeurs d'exemple, aucun secret)
+        run: docker compose --env-file .env.example -f infra/compose.yml config --quiet
+      - name: Image de l'API construite depuis uv.lock
+        run: docker build -f infra/api.Dockerfile -t velos-api:ci .
