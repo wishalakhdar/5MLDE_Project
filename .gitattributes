@@ -1,0 +1,3 @@
+# Les scripts shell sont exécutés dans des conteneurs Linux : fins de ligne LF obligatoires,
+# quel que soit le système de la personne qui clone le dépôt.
+*.sh text eol=lf
