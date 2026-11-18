@@ -1,0 +1,15 @@
+# Ce qui n'entre JAMAIS dans l'image de l'API (secrets, environnement local, données, résultats)
+.git
+.github
+.env
+.venv
+**/__pycache__
+.pytest_cache
+data
+runs
+reports
+registry
+mlruns
+mlartifacts
+*.joblib
+*.db

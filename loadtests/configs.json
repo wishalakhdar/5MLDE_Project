@@ -1,0 +1,19 @@
+{
+  "description": "Protocole de charge : chaque configuration de l'API est soumise aux mêmes paliers d'utilisateurs.",
+  "slo": {
+    "p95_ms": 500,
+    "max_failure_ratio": 0.01,
+    "target_users": 40,
+    "justification": "Objectif pédagogique : 40 utilisateurs simultanés (~40 requêtes/s proposées) avec 95 % des réponses en moins de 500 ms et moins de 1 % d'échecs (5xx, délais dépassés)."
+  },
+  "levels": [10, 20, 40, 80],
+  "level_seconds": 45,
+  "warmup_seconds": 10,
+  "configs": [
+    {"name": "A-0.5cpu-1w", "API_CPUS": "0.5", "API_WORKERS": "1", "API_MEMORY": "1g"},
+    {"name": "B-1cpu-1w",   "API_CPUS": "1.0", "API_WORKERS": "1", "API_MEMORY": "1g"},
+    {"name": "C-1cpu-2w",   "API_CPUS": "1.0", "API_WORKERS": "2", "API_MEMORY": "1g"},
+    {"name": "D-2cpu-2w",   "API_CPUS": "2.0", "API_WORKERS": "2", "API_MEMORY": "1g"},
+    {"name": "E-4cpu-4w",   "API_CPUS": "4.0", "API_WORKERS": "4", "API_MEMORY": "2g", "note": "ajoutée après la première série : D frôle l'objectif à 40 utilisateurs (p95 610 ms) ; objectif inchangé"}
+  ]
+}

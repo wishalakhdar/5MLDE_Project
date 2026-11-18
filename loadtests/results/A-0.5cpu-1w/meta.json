@@ -1,0 +1,31 @@
+{
+  "config": {
+    "name": "A-0.5cpu-1w",
+    "API_CPUS": "0.5",
+    "API_WORKERS": "1",
+    "API_MEMORY": "1g"
+  },
+  "health": {
+    "status": "ok",
+    "model": {
+      "name": "velos-demand-cnt",
+      "version": 1,
+      "alias": "champion",
+      "qualification": "production-ready"
+    },
+    "database": "ok"
+  },
+  "levels": [
+    10,
+    20,
+    40,
+    80
+  ],
+  "level_seconds": 45,
+  "finished_at_utc": "2026-11-18T16:47:50.667071+00:00",
+  "machine": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 8,
+    "python": "3.12.14"
+  }
+}
