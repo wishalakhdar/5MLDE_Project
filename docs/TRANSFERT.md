@@ -19,3 +19,13 @@
 - Alerte webhook : testee uniquement avec webhook.site (format {"text": ...}). Teams peut exiger un autre format.
 - Non teste : coupure reseau reelle (les retries sont testes en simulation seulement).
 - Seuils de qualification figes en version 1.1.0 : ne pas les deplacer pour faire passer un modele.
+
+## Notes de validation (Jeffrey, Windows 11, Docker Desktop)
+- Prérequis : virtualisation activée et WSL 2 installé (Docker Desktop ne démarrait pas sans).
+- Fins de ligne : 00-roles.sh extrait en CRLF par Git sous Windows ; corrigé par .gitattributes (*.sh eol=lf).
+- Tests : 55 passed (1 avertissement pandas dans synthetic.py : dayofweek déprécié).
+- Docker : 4 services running, postgres healthy, POSTGRES_PORT=5432 ; rôles api_writer et grafana_reader et 4 tables tracing.* présents.
+- Données : empreinte hour.csv identique (e03de4ee…), 17 379 lignes ; replay-init : base 8 645, corpus 742, 11 lots.
+- Pipeline : velos run -> v1 production-ready, validation.mae=64.95, rechargement ok (delta 0.0).
+- Alias champion posé sur v1 ; prédiction par alias OK (models:/velos-demand-cnt@champion, version 1).
+- Grafana : source velos-postgres testée, « Database Connection OK ».
