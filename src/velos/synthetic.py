@@ -18,7 +18,7 @@ def make_hour_frame(start="2011-01-01", end="2012-12-31", seed: int = 0, drop_fr
     d = pd.DatetimeIndex(dates)
     month = d.month.to_numpy()
     year = (d.year - 2011).to_numpy()
-    weekday = ((d.dayofweek.to_numpy() + 1) % 7)  # 0 = dimanche, comme dans UCI
+    weekday = ((d.day_of_week.to_numpy() + 1) % 7)  # 0 = dimanche, comme dans UCI
     holiday = (rng.random(len(d)) < 0.02).astype(int)
     workingday = ((weekday > 0) & (weekday < 6) & (holiday == 0)).astype(int)
     season = ((month % 12) // 3 + 1)
