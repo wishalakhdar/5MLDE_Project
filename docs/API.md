@@ -43,3 +43,26 @@ la version du modèle utilisée. Les erreurs suivent `contract/error_example.jso
 - **Une panne de la base de traces ne bloque pas les prédictions** : la trace perdue est journalisée et `/health`
   passe en `degraded` ; les feedbacks, eux, répondent 503 (ils n'ont de sens qu'enregistrés).
 - Limite : `POST /model/reload` n'est pas authentifié (service local uniquement).
+
+## Lancer l'API dans Docker (configuration de référence pour les tests de charge)
+```
+docker compose --env-file .env -f infra/compose.yml up -d --build api
+docker compose --env-file .env -f infra/compose.yml ps api        # « healthy » après ~30 s
+curl.exe -s http://127.0.0.1:8000/health
+```
+Image : `infra/api.Dockerfile` (dépendances installées depuis `uv.lock`, sans les outils de développement).
+`.dockerignore` exclut `.env`, `.venv`, les données et les résultats : aucun secret ni dataset dans l'image.
+Dans le réseau Docker, l'API joint MLflow par `http://mlflow:7281` et PostgreSQL par `postgres:5432`
+(d'où `--allowed-hosts` sur le serveur MLflow, qui refuse sinon les noms d'hôte autres que localhost).
+
+Ressources réglables sans modifier de fichier (variables lues par `infra/compose.yml`) :
+
+| Variable | Défaut | Rôle |
+|---|---|---|
+| `API_CPUS` | `1.0` | limite de CPU du conteneur |
+| `API_MEMORY` | `1g` | limite de mémoire du conteneur |
+| `API_WORKERS` | `1` | nombre de processus Uvicorn (chacun charge le modèle) |
+| `API_PORT` | `8000` | port publié sur le poste |
+
+Exemple : `$env:API_CPUS="2"; $env:API_WORKERS="2"; docker compose --env-file .env -f infra/compose.yml up -d api`
+Ne pas lancer en même temps l'API locale (`uvicorn`) sur le même port.

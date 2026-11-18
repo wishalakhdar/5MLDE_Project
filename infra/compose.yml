@@ -24,6 +24,7 @@ services:
       mlflow server --host 0.0.0.0 --port 7281
       --backend-store-uri sqlite:////mlflow/mlflow.db
       --artifacts-destination /mlflow/artifacts --serve-artifacts
+      --allowed-hosts localhost:*,127.0.0.1:*,mlflow:*
     volumes: [mlflowdata:/mlflow]
     ports: ["127.0.0.1:7281:7281"]
 
@@ -44,5 +45,34 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
     ports: ["127.0.0.1:3000:3000"]
+
+  # API de prédiction (phase 2). Ressources réglables pour les tests de charge, par exemple :
+  #   $env:API_CPUS="2"; $env:API_WORKERS="2"; docker compose --env-file .env -f infra/compose.yml up -d api
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    image: velos-api:local
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:7281
+      VELOS_DB_HOST: postgres
+      POSTGRES_PORT: "5432"
+      API_WRITER_PASSWORD: ${API_WRITER_PASSWORD}
+      API_WORKERS: ${API_WORKERS:-1}
+    deploy:
+      resources:
+        limits:
+          cpus: "${API_CPUS:-1.0}"
+          memory: ${API_MEMORY:-1g}
+    depends_on:
+      postgres: {condition: service_healthy}
+      mlflow: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      start_period: 40s
+    ports: ["127.0.0.1:${API_PORT:-8000}:8000"]
 
 volumes: {pgdata: {}, mlflowdata: {}, prefectdata: {}, grafanadata: {}}
