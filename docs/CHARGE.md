@@ -37,7 +37,28 @@ puis http://localhost:8089.
   mais la distribution des prédictions n'est pas réaliste (sans effet sur la mesure de performance).
 - Chaque requête écrit aussi dans PostgreSQL : la base fait partie du système mesuré (c'est voulu).
 
-## Résultats
-Voir `loadtests/results/summary.md` (généré) et la synthèse OPS.
+## Résultats (série du 18/11/2026, Docker : 8 CPU)
+Tableau complet : `loadtests/results/summary.md`.
 
-| E-4cpu-4w | 4 | 4 | 2 Go | ajoutée après la 1re série (D frôle l'objectif) : 4 CPU suffisent-ils pour 40 utilisateurs ? |
+| Configuration | Débit max mesuré | Palier max respectant l'objectif | p95 à ce palier | Mémoire max |
+|---|---:|---:|---:|---:|
+| A-0.5cpu-1w | ~11 req/s | aucun (p95 580 ms dès 10 utilisateurs) | — | 243 Mio |
+| B-1cpu-1w | ~21 req/s | 10 utilisateurs | 150 ms | 254 Mio |
+| C-1cpu-2w | ~18 req/s | 10 utilisateurs | 110 ms | 470 Mio |
+| D-2cpu-2w | ~35 req/s | 20 utilisateurs | 170 ms | 472 Mio |
+| E-4cpu-4w | ~57 req/s | **40 utilisateurs (cible)** | **290 ms** | 875 Mio |
+
+Constats : service limité par le CPU (~15-18 req/s par CPU) ; mémoire ≈ 220 Mio par processus (un modèle chargé
+par processus), indépendante de la charge ; plus de processus que de CPU n'apporte rien (C) ; aucune erreur jusqu'à
+40 utilisateurs.
+
+## Recommandation
+- **Cible de 40 utilisateurs simultanés : E (4 CPU, 4 processus, 2 Go)**, p95 290 ms (marge de 42 % sur 500 ms), 0 échec.
+- Jusqu'à 20 utilisateurs : D (2 CPU, 2 processus, 1 Go).
+- Au-delà : réplication horizontale de conteneurs E, avec un plafond de réplicas pour borner les coûts.
+- Ne pas configurer plus de processus Uvicorn que de CPU.
+
+Limites : Locust, l'API et PostgreSQL partagent la même machine ; une série par configuration (écart observé
+~15 % entre deux séries de B) ; E ajoutée après la première série (objectif inchangé) ; mémoire de E réductible
+(~1,25 Go) mais non mesurée. Un palier de D a dû être remesuré : une mise en veille de la machine avait bloqué la
+mesure (0,1 req/s, p95 de 31 min).
