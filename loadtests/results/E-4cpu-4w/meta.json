@@ -1,0 +1,32 @@
+{
+  "config": {
+    "name": "E-4cpu-4w",
+    "API_CPUS": "4.0",
+    "API_WORKERS": "4",
+    "API_MEMORY": "2g",
+    "note": "ajoutée après la première série : D frôle l'objectif à 40 utilisateurs (p95 610 ms) ; objectif inchangé"
+  },
+  "health": {
+    "status": "ok",
+    "model": {
+      "name": "velos-demand-cnt",
+      "version": 1,
+      "alias": "champion",
+      "qualification": "production-ready"
+    },
+    "database": "ok"
+  },
+  "levels": [
+    10,
+    20,
+    40,
+    80
+  ],
+  "level_seconds": 45,
+  "finished_at_utc": "2026-11-18T17:46:57.480810+00:00",
+  "machine": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu_count": 8,
+    "python": "3.12.14"
+  }
+}
