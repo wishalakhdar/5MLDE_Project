@@ -6,6 +6,7 @@ Les échecs déclenchent une alerte ; seuls les incidents TRANSITOIRES sont rejo
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from prefect import flow, get_run_logger, task
@@ -18,6 +19,7 @@ from .pipeline import commit_lot, load_data
 from .preprocessing import preprocess_data
 from .registry import make_backend
 from .release import release_model
+from .run_log import make_entry, record_pipeline_run
 from .tracking import make_tracker
 from .training import train_models
 
@@ -76,6 +78,9 @@ def process_lot_flow(config_path: str, lot_path: str | None = None) -> dict:
     cfg = load_config(config_path)
     ret = _retries(cfg)
     tracker = make_tracker(cfg)
+    # Journal du traitement pour Grafana (tracing.pipeline_runs), écrit dans TOUS les cas (finally).
+    started_at = datetime.now(timezone.utc)
+    outcome = {"status": "failed"}
     try:
         # Ingestion/qualité : une erreur de qualité est PERMANENTE (jamais rejouée)
         data = t_load.with_options(**ret)(cfg, lot_path, tracker)
@@ -84,15 +89,23 @@ def process_lot_flow(config_path: str, lot_path: str | None = None) -> dict:
         result = t_eval(trained)
         release = t_release.with_options(**ret)(cfg, result)
         t_commit(cfg, result)
+        outcome = {"status": "succeeded", "model_version": release["version"], "verdict": release["verdict"]}
     except AlreadyProcessed as exc:
+        outcome = {"status": "already_processed"}
         log.info("Rien à faire : %s", exc)
         return {"status": "deja-traite"}
     except QualityError as exc:
+        outcome = {"status": "rejected", "error": str(exc)}
         tracker.fail("ingestion", exc)
         raise
     except BaseException as exc:
+        outcome = {"status": "failed", "error": f"{type(exc).__name__}: {exc}"}
         tracker.fail("flow", exc)
         raise
+    finally:
+        lot_id = Path(lot_path).stem if lot_path else "base"
+        record_pipeline_run(make_entry("velos-process-lot", lot_id, started_at, datetime.now(timezone.utc),
+                                       **outcome))
     log.info("Version %s — verdict %s", release["version"], release["verdict"])
     return {"status": "ok", **release}
 

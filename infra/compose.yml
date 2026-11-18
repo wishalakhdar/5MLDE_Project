@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: velos
       API_WRITER_PASSWORD: ${API_WRITER_PASSWORD}
       GRAFANA_READER_PASSWORD: ${GRAFANA_READER_PASSWORD}
+      PIPELINE_WRITER_PASSWORD: ${PIPELINE_WRITER_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres:/docker-entrypoint-initdb.d:ro
@@ -27,6 +28,12 @@ services:
       --allowed-hosts localhost:*,127.0.0.1:*,mlflow:*
     volumes: [mlflowdata:/mlflow]
     ports: ["127.0.0.1:7281:7281"]
+    healthcheck:   # « prêt » = l'API REST répond (l'API de prédiction attend cet état pour charger le modèle)
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7281/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 10
+      start_period: 30s
 
   prefect:
     image: prefecthq/prefect:3.8.7-python3.12
@@ -66,7 +73,7 @@ services:
           memory: ${API_MEMORY:-1g}
     depends_on:
       postgres: {condition: service_healthy}
-      mlflow: {condition: service_started}
+      mlflow: {condition: service_healthy}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
       interval: 10s
