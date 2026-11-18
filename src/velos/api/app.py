@@ -61,7 +61,10 @@ def create_app(cfg: dict | None = None, model_loader=None, store: TraceStore | N
             app.state.model = await run_in_threadpool(load_model)
         except VelosError as exc:
             LOGGER.error("Démarrage SANS modèle (les prédictions répondront 503) : %s", exc)
-        yield
+        try:
+            yield
+        finally:
+            store.close()   # ferme proprement les connexions à la base
 
     app = FastAPI(title="Vélos — API de prédiction",
                   description="Prévision du nombre de locations de vélos par heure (UCI Bike Sharing).",
