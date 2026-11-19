@@ -119,6 +119,15 @@ def test_feedback_nominal_puis_inconnu(api):
     assert r.status_code == 404 and r.json()["error"]["code"] == "unknown_prediction"
 
 
+def test_second_feedback_sur_la_meme_prediction_refuse_409(api):
+    client, store = api
+    pred_id = client.post("/predict", json={"instances": [VALID]}).json()["predictions"][0]["prediction_id"]
+    assert client.post("/feedback", json={"prediction_id": pred_id, "observed_cnt": 130}).status_code == 201
+    r = client.post("/feedback", json={"prediction_id": pred_id, "observed_cnt": 999})
+    assert r.status_code == 409 and r.json()["error"]["code"] == "feedback_exists"
+    assert len(store.feedbacks) == 1 and store.feedbacks[0][2] == 130   # la première valeur est conservée
+
+
 def test_feedback_negatif_refuse(api):
     client, _ = api
     r = client.post("/feedback", json={"prediction_id": str(uuid.uuid4()), "observed_cnt": -3})

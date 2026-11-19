@@ -1,7 +1,7 @@
 [project]
 name = "velos-mlops"
 version = "0.1.0"
-description = "Projet final 5MLDE : chaîne MLOps sur UCI Bike Sharing (phase 1 : données, pipeline, MLflow, Prefect)"
+description = "Projet final 5MLDE : chaîne MLOps sur UCI Bike Sharing (données, pipeline, MLflow, Prefect, API, supervision)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -34,7 +34,9 @@ CREATE TABLE tracing.feedbacks (
     feedback_id    uuid        PRIMARY KEY,
     prediction_id  uuid        NOT NULL REFERENCES tracing.predictions(prediction_id),
     created_at     timestamptz NOT NULL DEFAULT now(),
-    observed_cnt   double precision NOT NULL CHECK (observed_cnt >= 0)
+    observed_cnt   double precision NOT NULL CHECK (observed_cnt >= 0),
+    -- Un seul feedback par prédiction : un second envoi est refusé (409 feedback_exists).
+    CONSTRAINT feedbacks_prediction_id_unique UNIQUE (prediction_id)
 );
 
 CREATE INDEX ON tracing.api_requests (received_at);

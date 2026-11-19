@@ -1,6 +1,6 @@
 """Accès au registre de modèles. Une interface, deux implémentations :
   - InMemoryRegistry : tests et essais à blanc ;
-  - MlflowRegistry   : adaptateur fin vers le Model Registry MLflow (à valider avec le serveur lancé).
+  - MlflowRegistry   : adaptateur fin vers le Model Registry MLflow (validé avec un serveur MLflow 3.16.1 réel).
 
 La LOGIQUE (qualification, sélection, retour arrière) vit dans lifecycle.py et est testée avec InMemoryRegistry.
 """

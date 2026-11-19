@@ -3,7 +3,7 @@
 ## Checklist avant de passer la main
 - [x] `uv sync` puis `uv.lock` commité ; `uv run pytest` vert ; CI verte
 - [x] `data/manifest.json` commité (créé par `velos fetch`)
-- [x] `docker compose --env-file .env -f infra/compose.yml up -d` : 4 services sains (noter les tags d'images réellement utilisés)
+- [x] `docker compose --env-file .env -f infra/compose.yml up -d` : 4 services sains à la date du transfert, 5 avec l'API de la phase 2 (noter les tags d'images réellement utilisés)
 - [x] Run nominal sur les VRAIES données : fetch → replay-init → `velos run` (base) → `velos run --lot` ×N
 - [x] Au moins 2 versions dans le registre, `velos qualify`, `velos select` (alias champion), `velos rollback` testé
 - [x] Incident n°1 rejoué : `velos make-bad-lot` → code 2, rapport dans `data/rejected`, alerte reçue

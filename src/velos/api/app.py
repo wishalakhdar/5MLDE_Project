@@ -28,7 +28,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from ..config import load_config
 from ..errors import VelosError
 from .model_handle import ModelHandle, load_champion
-from .persistence import RequestTrace, StoreUnavailable, TraceStore, UnknownPrediction, make_store
+from .persistence import (DuplicateFeedback, RequestTrace, StoreUnavailable, TraceStore, UnknownPrediction,
+                          make_store)
 from .schemas import FeedbackRequest, PredictRequest
 from .service import ApiError, error_body, predict_instances, require_model
 
@@ -143,6 +144,10 @@ def create_app(cfg: dict | None = None, model_loader=None, store: TraceStore | N
         except UnknownPrediction as exc:
             raise ApiError(404, "unknown_prediction", "Prédiction inconnue",
                            [f"prediction_id {body.prediction_id} introuvable"]) from exc
+        except DuplicateFeedback as exc:
+            # Un seul feedback par prédiction : un second envoi (double clic, client qui réessaie) est refusé.
+            raise ApiError(409, "feedback_exists", "Un feedback existe déjà pour cette prédiction",
+                           [f"prediction_id {body.prediction_id} déjà renseigné"]) from exc
         except StoreUnavailable as exc:
             raise ApiError(503, "storage_unavailable", "Stockage des feedbacks indisponible, réessayez plus tard") from exc
         return {"request_id": str(request.state.request_id), "feedback_id": str(feedback_id),

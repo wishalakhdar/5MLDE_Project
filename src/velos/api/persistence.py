@@ -23,6 +23,10 @@ class UnknownPrediction(VelosError):
     """Feedback sur une prédiction qui n'a jamais été enregistrée."""
 
 
+class DuplicateFeedback(VelosError):
+    """Un feedback existe déjà pour cette prédiction (un seul autorisé)."""
+
+
 @dataclass(frozen=True)
 class RequestTrace:
     request_id: uuid.UUID
@@ -47,7 +51,8 @@ class TraceStore(ABC):
 
     @abstractmethod
     def record_feedback(self, prediction_id: uuid.UUID, observed_cnt: float) -> uuid.UUID:
-        """Enregistre la valeur réellement observée. Lève UnknownPrediction si l'identifiant est inconnu."""
+        """Enregistre la valeur réellement observée. Lève UnknownPrediction si l'identifiant est inconnu,
+        DuplicateFeedback si un feedback existe déjà pour cette prédiction."""
 
     @abstractmethod
     def record_model_load(self, name: str, version: int, alias: str, qualification: str, data_origin: str) -> None:
@@ -88,6 +93,8 @@ class InMemoryTraceStore(TraceStore):
         with self._lock:
             if prediction_id not in self.predictions:
                 raise UnknownPrediction(f"prédiction inconnue : {prediction_id}")
+            if any(existing == prediction_id for _, existing, _ in self.feedbacks):
+                raise DuplicateFeedback(f"feedback déjà enregistré pour la prédiction {prediction_id}")
             feedback_id = uuid.uuid4()
             self.feedbacks.append((feedback_id, prediction_id, observed_cnt))
             return feedback_id

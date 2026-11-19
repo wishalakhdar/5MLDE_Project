@@ -104,7 +104,7 @@ Grafana : http://localhost:3000 (dossier *Velos*). Les flows journalisent leurs 
 ```
 uv run pytest
 ```
-105 tests (1 test d'intégration PostgreSQL lancé à la demande : voir `docs/API.md`). Couvrent : configuration, contrat d'entrée, ingestion et empreintes, chaque règle de qualité, absence de fuite de
+107 tests (1 test d'intégration PostgreSQL lancé à la demande : voir `docs/API.md`). Couvrent : configuration, contrat d'entrée, ingestion et empreintes, chaque règle de qualité, absence de fuite de
 données, publication atomique, qualification, sélection et retour arrière, chargement par alias, idempotence des lots,
 quarantaine ; API (nominal, 422, 503, 500, feedback, panne de stockage, rechargement), stockage PostgreSQL, journal
 des traitements, règle de recommandation de dimensionnement. La CI (`.github/workflows/ci.yml`) rejoue les tests, un

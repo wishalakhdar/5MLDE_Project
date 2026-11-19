@@ -1,9 +1,10 @@
 {
   "version": "1.0.0",
   "endpoints": {
-    "POST /predict": "corps example_request.json -> example_response.json",
-    "POST /feedback": "{prediction_id, observed_cnt>=0}",
-    "GET /health": "{status, model_version}"
+    "POST /predict": "corps example_request.json -> example_response.json (200) ; erreurs 422 invalid_input, 503 model_unavailable",
+    "POST /feedback": "{prediction_id, observed_cnt>=0} -> 201 ; 404 unknown_prediction, 409 feedback_exists (un seul feedback par prédiction), 422 invalid_input, 503 storage_unavailable",
+    "GET /health": "{status: ok|degraded|unavailable, model: {name, version, alias, qualification} | null, database: ok|unavailable} ; 503 si aucun modèle chargé",
+    "POST /model/reload": "recharge le modèle désigné par l'alias -> {model, previous_version} ; 503 model_unavailable en conservant le modèle actuel"
   },
   "features": [
     "season",
@@ -86,8 +87,11 @@
   ],
   "errors": {
     "invalid_input": 422,
+    "unknown_prediction": 404,
+    "feedback_exists": 409,
     "model_unavailable": 503,
+    "storage_unavailable": 503,
     "internal": 500
   },
-  "model_loading": "models:/velos-demand-cnt@champion ; refuser de démarrer si l'alias est absent"
+  "model_loading": "models:/velos-demand-cnt@champion ; si l'alias ou MLflow est indisponible au démarrage, l'API démarre SANS modèle : /health et /predict répondent 503 jusqu'à un POST /model/reload réussi"
 }

@@ -11,7 +11,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from velos.api.persistence import PredictionTrace, RequestTrace, StoreUnavailable, UnknownPrediction
+from velos.api.persistence import (DuplicateFeedback, PredictionTrace, RequestTrace, StoreUnavailable,
+                                  UnknownPrediction)
 from velos.api.postgres_store import PostgresTraceStore, conninfo, connection_settings
 from velos.errors import ConfigError
 
@@ -63,6 +64,10 @@ class ForeignKeyError(Exception):
     sqlstate = "23503"
 
 
+class UniqueViolationError(Exception):
+    sqlstate = "23505"
+
+
 def trace(version=1):
     return RequestTrace(uuid.uuid4(), "/predict", 200, 4.2, version, None)
 
@@ -98,6 +103,12 @@ def test_feedback_sur_prediction_inconnue():
         store.record_feedback(uuid.uuid4(), 10.0)
 
 
+def test_second_feedback_devient_duplicate_feedback():
+    store = PostgresTraceStore(FakePool(fail=UniqueViolationError("duplicate key value violates unique constraint")))
+    with pytest.raises(DuplicateFeedback):
+        store.record_feedback(uuid.uuid4(), 10.0)
+
+
 def test_panne_de_base_devient_store_unavailable_sans_mot_de_passe():
     store = PostgresTraceStore(FakePool(fail=ConnectionError("connexion refusée")))
     with pytest.raises(StoreUnavailable) as exc:
@@ -122,6 +133,8 @@ def test_integration_vraie_base():
         p = PredictionTrace(uuid.uuid4(), {"hr": 1}, 1.0)
         store.record_request(request, [p])
         assert isinstance(store.record_feedback(p.prediction_id, 2.0), uuid.UUID)
+        with pytest.raises(DuplicateFeedback):   # contrainte UNIQUE (10-schema.sql ou 30-feedback-unique.sql)
+            store.record_feedback(p.prediction_id, 3.0)
         with pytest.raises(UnknownPrediction):
             store.record_feedback(uuid.uuid4(), 1.0)
     finally:
