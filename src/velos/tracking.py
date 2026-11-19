@@ -1,6 +1,6 @@
 """Suivi des exécutions. Une interface, deux implémentations :
   - NullTracker   : enregistre en mémoire (tests, mode sans MLflow) ;
-  - MlflowTracker : écrit dans MLflow (adaptateur fin, à valider sur votre machine avec le serveur lancé).
+  - MlflowTracker : écrit dans MLflow (adaptateur fin, validé avec un serveur MLflow 3.16.1 réel).
 
 Suivi EXPLICITE : le run_id est transmis aux étapes via l'objet tracker, jamais via un run « actif » global.
 """

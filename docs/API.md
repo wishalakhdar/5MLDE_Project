@@ -24,7 +24,7 @@ Test d'intégration sur la vraie base : `$env:VELOS_PG_TESTS="1"; uv run --env-f
 | Route | Rôle | Codes |
 |---|---|---|
 | `POST /predict` | Prédictions en ligne ou par lot (`instances` : 1 à `api.max_instances` lignes) | 200, 422, 503, 500 |
-| `POST /feedback` | Valeur observée pour une prédiction (`prediction_id`, `observed_cnt` ≥ 0) | 201, 404, 422, 503 |
+| `POST /feedback` | Valeur observée pour une prédiction (`prediction_id`, `observed_cnt` ≥ 0) ; **un seul feedback par prédiction** | 201, 404, 409, 422, 503 |
 | `GET /health` | État du service : modèle chargé (version) et base de traces | 200, 503 |
 | `POST /model/reload` | Recharge le modèle désigné par l'alias, sans redémarrer | 200, 503 |
 
@@ -42,6 +42,9 @@ la version du modèle utilisée. Les erreurs suivent `contract/error_example.jso
   version du modèle, code d'erreur, et les prédictions avec leurs features.
 - **Une panne de la base de traces ne bloque pas les prédictions** : la trace perdue est journalisée et `/health`
   passe en `degraded` ; les feedbacks, eux, répondent 503 (ils n'ont de sens qu'enregistrés).
+- **Un seul feedback par prédiction** : contrainte `UNIQUE` sur `tracing.feedbacks.prediction_id` ; un second envoi
+  répond 409 `feedback_exists` et la première valeur est conservée. Base créée avant cette règle : lancer une fois
+  `infra/postgres/30-feedback-unique.sql` (commande en tête du fichier).
 - Limite : `POST /model/reload` n'est pas authentifié (service local uniquement).
 
 ## Lancer l'API dans Docker (configuration de référence pour les tests de charge)

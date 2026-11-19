@@ -11,6 +11,17 @@
 | `prefect-flows.png` | Orchestration : 2 flows `velos-process-lot` réussis (6 tâches) et 2 en échec (lot corrompu bloqué à la 1re tâche) |
 | `historique-selections.png` | Traçabilité des mises en service : `select` v1, `select` v3, `rollback` vers v1 (auteur, date, motif, politique) |
 
+Compléments du 19/11/2026 (répétition de la soutenance) :
+
+| Fichier | Ce qu'il prouve |
+|---|---|
+| `prefect-taches-lot-sain.png` | Les 6 tâches d'un flow réussi, de `1-ingestion-qualite` à `6-acceptation-lot` |
+| `rejet-et-alerte-terminal.png` | Incident n°1 : lot 2012-03 corrompu rejeté (`plages`, `coherence_cnt`, `unicite`) et alerte émise par le hook `alert_on_failure` (sans webhook configuré, l'alerte est écrite dans le journal) |
+| `rapport-rejet.png` | Rapport de quarantaine `data/rejected/*.rapport.json` : les 10 règles exécutées et le détail des échecs (règle, message, nombre, exemples de lignes) |
+| `refus-v2-terminal.png` | Règle de mise en service : v2 refusée (gain −5,6 % face au champion v1 < 1 %), alias inchangé |
+| `api-docs.png` | Documentation OpenAPI générée par FastAPI : `/health`, `/predict`, `/feedback`, `/model/reload` |
+| `incident2-postgres-terminal.png` | Incident n°2 : PostgreSQL arrêté, `/health` en `degraded` (`database: unavailable`) mais `/predict` répond 200 |
+
 La panne PostgreSQL de l'incident n°2 n'apparaît pas dans Grafana (traces non enregistrables pendant la panne) :
 elle est documentée par les logs de l'API dans `docs/DEMO.md` (section 6).
 Résultats de charge : fichiers `loadtests/results/` (pas de capture nécessaire).

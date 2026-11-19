@@ -1,6 +1,6 @@
 # Socle d'infrastructure. Lancer : docker compose --env-file .env -f infra/compose.yml up -d
-# ATTENTION : les versions d'images ci-dessous n'ont PAS été vérifiées depuis l'environnement de développement
-# (pas de Docker ni de réseau). Si un tag n'existe pas, ajustez-le puis notez-le dans docs/TRANSFERT.md.
+# Versions d'images vérifiées à l'exécution (Docker Desktop, Windows 11, 18-19/11/2026) :
+# postgres:17 suit les mises à jour mineures (limite connue, voir README). Tout changement de tag est à noter dans docs/TRANSFERT.md.
 services:
   postgres:
     image: postgres:17

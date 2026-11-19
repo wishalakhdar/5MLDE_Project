@@ -92,7 +92,7 @@ Constats :
 - Ne jamais configurer plus de processus que de CPU ; prévoir ~250 Mio de mémoire par processus.
 
 ## 7. Qualité et automatisation
-105 tests automatisés (`uv run pytest`) et un test d'intégration PostgreSQL à la demande. CI GitHub : tests, parcours
+107 tests automatisés (`uv run pytest`) et un test d'intégration PostgreSQL à la demande. CI GitHub : tests, parcours
 de bout en bout sur données synthétiques avec lot corrompu (code 2 attendu), validation de la configuration Compose
 et construction de l'image de l'API depuis `uv.lock`.
 

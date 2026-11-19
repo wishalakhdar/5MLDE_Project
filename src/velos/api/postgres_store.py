@@ -18,10 +18,12 @@ import os
 import uuid
 
 from ..errors import ConfigError
-from .persistence import PredictionTrace, RequestTrace, StoreUnavailable, TraceStore, UnknownPrediction
+from .persistence import (DuplicateFeedback, PredictionTrace, RequestTrace, StoreUnavailable, TraceStore,
+                          UnknownPrediction)
 
 PASSWORD_ENV = "API_WRITER_PASSWORD"
-FOREIGN_KEY_VIOLATION = "23503"   # code d'erreur SQL standard
+FOREIGN_KEY_VIOLATION = "23503"   # codes d'erreur SQL standard
+UNIQUE_VIOLATION = "23505"
 LOGGER = logging.getLogger("velos.api.postgres")
 # 127.0.0.1 plutôt que localhost : sous Windows, « localhost » est d'abord essayé en IPv6 (::1), où Docker
 # n'écoute pas ; chaque connexion attendait alors connect_timeout (3 s) avant de passer en IPv4.
@@ -98,6 +100,9 @@ class PostgresTraceStore(TraceStore):
             # 23503 = violation de clé étrangère : la prédiction référencée n'existe pas.
             if getattr(exc, "sqlstate", None) == FOREIGN_KEY_VIOLATION:
                 raise UnknownPrediction(f"prédiction inconnue : {prediction_id}") from exc
+            # 23505 = violation d'unicité : un feedback existe déjà pour cette prédiction.
+            if getattr(exc, "sqlstate", None) == UNIQUE_VIOLATION:
+                raise DuplicateFeedback(f"feedback déjà enregistré pour la prédiction {prediction_id}") from exc
             raise _unavailable(exc) from exc
         return feedback_id
 

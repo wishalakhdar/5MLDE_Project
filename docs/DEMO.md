@@ -6,7 +6,7 @@ Durée : environ 10 minutes. Chaque étape indique le résultat attendu.
 ## 0. Préparation (une fois)
 ```
 docker compose --env-file .env -f infra/compose.yml up -d
-docker compose --env-file .env -f infra/compose.yml ps          # 4 services running, postgres healthy
+docker compose --env-file .env -f infra/compose.yml ps          # 5 services running, postgres, mlflow et api healthy
 $env:PREFECT_API_URL="http://localhost:4200/api"
 ```
 **Si vous avez déjà fait des essais avec un autre MLflow** (par exemple un MLflow local), renommez l'ancien historique
@@ -115,7 +115,9 @@ lors de la première série). Résultats et recommandation : `loadtests/results/
 ## 8. Preuves à conserver pour la synthèse OPS
 - Capture MLflow : liste des versions avec tags de qualification, alias `champion`.
 - `type registry\selection-history.jsonl` (select, select, rollback).
-- Rapport de rejet `data\rejected\*.rapport.json` et capture du run Prefect en échec.
-- Capture de l'alerte reçue.
+- Rapport de rejet `data\rejected\*.rapport.json` et capture du run Prefect en échec
+  (conservés : `docs/preuves/rapport-rejet.png`, `docs/preuves/rejet-et-alerte-terminal.png`).
+- Capture de l'alerte : sans `ALERT_WEBHOOK_URL`, l'alerte est écrite dans le journal (`ALERTE (aucun webhook
+  configuré)`), visible sur `docs/preuves/rejet-et-alerte-terminal.png` ; avec un récepteur, capturer le message reçu.
 - Captures Grafana (`docs/preuves/`) : prédictions par version (v1 → v3 → v1), chargements du modèle, erreurs par code
   pendant l'incident n°2, derniers traitements ; `loadtests/results/summary.md`.
